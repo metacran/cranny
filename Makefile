@@ -1,8 +1,16 @@
 
 UBUNTU=ubuntu1404
-DB=db.rpkg.org
+DOBUILD=packer build -only=digitalocean \
+		-var-file=../config.json template.json
 
 all:
+
+.PHONY: all
+	 db-common db-vagrant db-do db-extra-files
+
+# -------------------------------------------------------------------
+
+DB=db.rpkg.org
 
 db-common: $(DB)/template.json db-extra-files
 
@@ -16,15 +24,36 @@ db-extra-files:
 	cat $(DB)/script/no-vagrant.sh box-ubuntu/script/vagrant.sh \
 		> $(DB)/script/vagrant.sh
 
-db-vagrant: $(DB)/box/virtualbox/$(UBUNTU)-nocm.box
+db-vagrant: db-common $(DB)/box/virtualbox/$(UBUNTU)-nocm.box
 
-db-do:
-	cd $(DB) && packer build -only=digitalocean \
-		-var-file=../config.json template.json
+db-do:db-common
+	cd $(DB) && $(DOBUILD)
 
 $(DB)/box/virtualbox/$(UBUNTU)-nocm.box: $(DB)/template.json
 	cd $(DB) && packer build -only=virtualbox-iso \
 		-var-file=../config.json template.json
 
-.PHONY: all
-	 db-common db-vagrant db-do db-extra-files
+# -------------------------------------------------------------------
+
+SEER=seer.rpkg.org
+
+seer-common: $(SEER)/template.json seer-extra-files
+
+$(SEER)/template.json: box-ubuntu/$(UBUNTU).json
+	cp $< $@
+	$(SEER)/add_es.py $@ $@ || rm $@
+	$(SEER)/add_do.py $@ $@ || rm $@
+
+seer-extra-files:
+	cp -r box-ubuntu/{http,script} ${SEER}/
+	cat $(SEER)/script/no-vagrant.sh box-ubuntu/script/vagrant.sh \
+		> $(SEER)/script/vagrant.sh
+
+seer-vagrant: seer-common $(SEER)/box/virtualbox/$(UBUNTU)-nocm.box
+
+seer-do: seer-common
+	cd $(SEER) && $(DOBUILD)
+
+$(SEER)/box/virtualbox/$(UBUNTU)-nocm.box: $(SEER)/template.json
+	cd $(SEER) && packer build -only=virtualbox-iso \
+		-var-file=../config.json template.json
