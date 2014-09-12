@@ -47,7 +47,33 @@ server {
   }
 
 }
+
+server {
+  listen $(hostname):5001;
+
+  error_log   /var/log/nginx/elasticsearch-errors.log;
+  access_log  /var/log/nginx/elasticsearch.log;
+
+  location / {
+    proxy_pass http://localhost:9200;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    auth_basic "Restricted";
+    auth_basic_user_file /etc/nginx/es-passwd;
+  }
+
+}
 EOF
+
+## Password
+
+sudo apt-get install apache2-utils
+
+htpasswd -cb /etc/nginx/es-passwd admin "$ES_PASSWORD"
+
+apt-get autoremote apache2-utils
+
+## Restart nginx
 
 service nginx restart
 
