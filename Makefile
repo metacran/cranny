@@ -1,7 +1,6 @@
 
 UBUNTU=ubuntu1404
-DOBUILD=packer build -only=digitalocean \
-		-var-file=../config.json template.json
+DOBUILD=packer build -only=digitalocean template.json
 
 all:
 
@@ -27,11 +26,11 @@ db-extra-files:
 db-vagrant: db-common $(DB)/box/virtualbox/$(UBUNTU)-nocm.box
 
 db-do:db-common
-	cd $(DB) && $(DOBUILD)
+	. config.sh && cd $(DB) && $(DOBUILD)
 
 $(DB)/box/virtualbox/$(UBUNTU)-nocm.box: $(DB)/template.json
-	cd $(DB) && packer build -only=virtualbox-iso \
-		-var-file=../config.json template.json
+	. config.sh && cd $(DB) && packer build -only=virtualbox-iso \
+		template.json
 
 # -------------------------------------------------------------------
 
@@ -52,8 +51,8 @@ seer-extra-files:
 seer-vagrant: seer-common $(SEER)/box/virtualbox/$(UBUNTU)-nocm.box
 
 seer-do: seer-common
-	cd $(SEER) && $(DOBUILD)
+	. config.sh && cd $(SEER) && $(DOBUILD)
 
 $(SEER)/box/virtualbox/$(UBUNTU)-nocm.box: $(SEER)/template.json
-	cd $(SEER) && packer build -only=virtualbox-iso \
-		-var-file=../config.json template.json
+	. config.sh && cd $(SEER) && packer build -only=virtualbox-iso \
+		template.json

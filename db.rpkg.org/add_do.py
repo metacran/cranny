@@ -33,8 +33,8 @@ builders.append(do)
 # supplied in -var-file or via environment variables
 variables = template["variables"]
 do_vars = json.loads("""
-{ "digitalocean_api_key": "",
-  "digitalocean_client_id": ""
+{ "digitalocean_api_key": "{{env `DIGITALOCEAN_API_KEY`}}",
+  "digitalocean_client_id": "{{env `DIGITALOCEAN_CLIENT_ID`}}"
 }
 """)
 template["variables"] = dict(variables.items() + do_vars.items())

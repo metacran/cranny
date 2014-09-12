@@ -22,8 +22,8 @@ scripts.insert(cleanup, 'script/hostname.sh')
 variables = template["variables"]
 do_vars = json.loads("""
 { 
-  "couchdb_password": "",
-  "couchdb_hostname": ""
+  "couchdb_password": "{{env `COUCHDB_PASSWORD`}}",
+  "couchdb_hostname": "{{env `COUCHDB_HOSTNAME`}}"
 }
 """)
 template["variables"] = dict(variables.items() + do_vars.items())
