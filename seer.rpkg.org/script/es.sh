@@ -1,4 +1,4 @@
-#! /bin/bash -eu
+#! /bin/bash -eux
 
 ## Install Elasticsearch
 
@@ -9,7 +9,8 @@ echo >> /etc/apt/sources.list \
 
 apt-get -y update && apt-get -y install elasticsearch
 
-## Need Java for Jetty
+## Java
+
 ## This is a trick to install Oracle JAva non-interactively
 ## Found at http://askubuntu.com/questions/190582
 
@@ -23,39 +24,44 @@ add-apt-repository -y ppa:webupd8team/java
 apt-get update
 apt-get -y install oracle-java7-installer
 
-## Install Jetty
+## Nginx for authentication
 
-wget http://central.maven.org/maven2/org/mortbay/jetty/dist/jetty-deb/8.1.14.v20131031/jetty-deb-8.1.14.v20131031.deb \
-     -O jetty-deb-8.1.14.v20131031.deb
-dpkg -i jetty-deb-8.1.14.v20131031.deb
+apt-get install -y nginx
 
-## Start Jetty
+cat > /etc/nginx/conf.d/elasticsearch_proxy.conf <<EOF
+server {
+  listen $(hostname):9200;
+  client_max_body_size 50M;
 
-update-rc.d jetty defaults 94 11
-/etc/init.d/jetty start
+  error_log   /var/log/nginx/elasticsearch-errors.log;
+  access_log  /var/log/nginx/elasticsearch.log;
 
-## Install Jetty plugin for Elasticsearch
+  location ~ ^/(_search|cran-[a-zA-Z0-9]*/_search)$ {
+    proxy_pass http://localhost:9200;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+  }
 
-apt-get -y install unzip
+  location / {
+      return 403;
+  }
 
-(
-    cd /usr/share/elasticsearch/plugins/
-    mkdir -p jetty
-    cd jetty
-    wget https://github.com/gaborcsardi/elasticsearch-jetty/releases/download/v1.2.3-beta/elasticsearch-jetty-1.2.3-beta.zip
-    unzip elasticsearch-jetty*.zip
-)
-
-cat >> /etc/elasticsearch/elasticsearch.yml <<EOF
-http.type: com.sonian.elasticsearch.http.jetty.JettyHttpServerTransportModule
-sonian.elasticsearch.http.jetty:
-    config: jetty.xml,jetty-hash-auth.xml,jetty-restrict-writes.xml,jetty-gzip.xml
+}
 EOF
+
+service nginx restart
 
 ## Disable dynamic scripting
 
-cat >> /etc/elasticsearch/elasticsearch.ym <<EOF
+cat >> /etc/elasticsearch/elasticsearch.yml <<EOF
 script.disable_dynamic: true
+EOF
+
+## Bind to localhost only
+
+cat >> /etc/elasticsearch/elasticsearch.yml <<EOF
+network.host: 127.0.0.1
+http.host: 127.0.0.1
 EOF
 
 ## Place ES scripts we need
