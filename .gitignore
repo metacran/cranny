@@ -1,0 +1,15 @@
+/tags
+/config.sh
+/*/box/virtualbox/.vagrant
+/*/box/virtualbox/*.box
+/*/http
+/*/template.json
+/*/script/cleanup.sh
+/*/script/cmtool.sh
+/*/script/desktop.sh
+/*/script/docker.sh
+/*/script/kernel.sh
+/*/script/minimize.sh
+/*/script/sshd.sh
+/*/script/vagrant.sh
+/*/script/vmtool.sh
