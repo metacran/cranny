@@ -36,7 +36,7 @@ server {
   error_log   /var/log/nginx/elasticsearch-errors.log;
   access_log  /var/log/nginx/elasticsearch.log;
 
-  location ~ ^/(_search|cran-[a-zA-Z0-9]*/_search)$ {
+  location ~ ^/(_search|cran-[a-zA-Z0-9]*/_search|cran-[a-zA-Z0-9]*/package/_search)$ {
     proxy_pass http://localhost:9200;
     proxy_http_version 1.1;
     proxy_set_header Connection "";
