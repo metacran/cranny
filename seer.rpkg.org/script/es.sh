@@ -90,9 +90,66 @@ network.host: 127.0.0.1
 http.host: 127.0.0.1
 EOF
 
+## Couchdb-river, and JS plugins
+
+(
+    cd /usr/share/elasticsearch
+    bin/plugin -install elasticsearch/elasticsearch-river-couchdb/2.3.0
+    bin/plugin -install elasticsearch/elasticsearch-lang-javascript/2.3.0
+)
+
 ## Place ES scripts we need
 
-# TODO
+mkdir /etc/elasticsearch/scripts
+cat > /etc/elasticsearch/scripts/couch_river_filter.js <<EOF
+var paste = function(d) {
+  x = "";
+  for (k in d) {
+    x = x + k.toString() + " (" + d[k] + "), ";
+  }
+  return x;
+};
+
+var cran_filter = function(ctx) {
+  // null object?
+  if (!ctx.doc) {
+    ctx.ignore = true;
+    return ctx;
+  }
+
+  // If it is not a package,
+  if (ctx.doc.type && ctx.doc.type != "package") {
+    ctx.ignore = true;
+    return ctx;
+  }
+
+  // Skip archivals
+  if (ctx.doc.archived) {
+    ctx.ignore = true;
+    return ctx;
+  }
+
+  // Otherwise take the latest version
+  if (ctx.doc.latest) {
+    ctx.doc = ctx.doc.versions[ctx.doc.latest];
+    // Squash dependency fields
+    ctx.doc.Imports = paste(ctx.doc.Imports);
+    ctx.doc.Depends = paste(ctx.doc.Depends);
+    ctx.doc.Suggests = paste(ctx.doc.Suggests);
+    ctx.doc.Enhances = paste(ctx.doc.Enhances);
+    ctx.doc.LinkingTo = paste(ctx.doc.LinkingTo);
+  } else {
+    ctx.ignore = true;
+  }
+
+  return ctx;
+};
+ctx = cran_filter(ctx);
+EOF
+
+cat > /etc/elasticsearch/scripts/cran_search_score.mvel <<EOF
+_score * (if (!doc['revdeps'].empty) doc['revdeps'].value + 1; else 1)
+EOF
 
 ## Start elasticsearch
 
