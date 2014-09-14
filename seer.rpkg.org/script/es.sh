@@ -30,7 +30,7 @@ apt-get install -y nginx
 
 cat > /etc/nginx/conf.d/elasticsearch_proxy.conf <<EOF
 server {
-  listen $(hostname):9200;
+  listen seer:9200;
   client_max_body_size 50M;
 
   error_log   /var/log/nginx/elasticsearch-errors.log;
@@ -49,7 +49,7 @@ server {
 }
 
 server {
-  listen $(hostname):5001;
+  listen seer:5001;
 
   error_log   /var/log/nginx/elasticsearch-errors.log;
   access_log  /var/log/nginx/elasticsearch.log;
