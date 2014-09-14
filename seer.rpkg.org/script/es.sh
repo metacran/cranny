@@ -147,8 +147,12 @@ var cran_filter = function(ctx) {
 ctx = cran_filter(ctx);
 EOF
 
-cat > /etc/elasticsearch/scripts/cran_search_score.mvel <<EOF
-_score * (if (!doc['revdeps'].empty) doc['revdeps'].value + 1; else 1)
+cat > /etc/elasticsearch/scripts/cran_search_score.js <<EOF
+if (doc["revdeps"]) {
+  _score * doc["revdeps"].value + 1;
+} else {
+  _score;
+};
 EOF
 
 ## Start elasticsearch
