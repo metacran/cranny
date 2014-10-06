@@ -131,7 +131,9 @@ var cran_filter = function(ctx) {
 
   // Otherwise take the latest version
   if (ctx.doc.latest) {
+    revdeps = ctx.doc.revdeps || 1;
     ctx.doc = ctx.doc.versions[ctx.doc.latest];
+    ctx.doc.revdeps = revdeps;
     // Squash dependency fields
     ctx.doc.Imports = paste(ctx.doc.Imports);
     ctx.doc.Depends = paste(ctx.doc.Depends);
